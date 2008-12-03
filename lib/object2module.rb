@@ -74,7 +74,7 @@ module Object2module
             RBASIC(chain_start)->flags = T_MODULE;                                       
                                                                                          
             jcur = chain_start;                                                           
-            for(rclass = klass; rclass != rb_cObject; rclass = SUPER(rclass)) {          
+            for(rclass = SUPER(klass); rclass != rb_cObject; rclass = SUPER(rclass)) {          
                 RCLASS(jcur)->super = j_class_new(rclass, rb_cObject);              
                 jcur = SUPER(jcur);                                                        
             }                                                                            
