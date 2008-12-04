@@ -3,7 +3,7 @@ require '../lib/object2module'
 
 module M
   def m
-    puts "m"
+      "m"
   end
 end
 
@@ -11,19 +11,19 @@ class A
   include M
 
   def a
-    puts "a"
+      "a"
   end
 end
 
 class B < A
   def b
-    puts "b"
+      "b"
   end
 end
 
 class C < B
   def c
-    puts "c"
+      "c"
   end
 end
 
@@ -53,10 +53,10 @@ class Object2ModuleTest < Test::Unit::TestCase
     h = C.object2module
     o = Object.new
     o.extend(h)
-    assert("a", o.a)
-    assert("b", o.b)
-    assert("c", o.c)
-    assert("m", o.m)
+    assert_equal("a", o.a)
+    assert_equal("b", o.b)
+    assert_equal("c", o.c)
+    assert_equal("m", o.m)
   end                                                       
 
   def test_object_to_module
@@ -85,9 +85,9 @@ class Object2ModuleTest < Test::Unit::TestCase
     h = o.object2module                                     
     l = Object.new                                          
     l.extend(h)                                             
-    assert("a", l.a)                                        
-    assert("b", l.b)                                        
-    assert("c", l.c)                                        
-    assert("m", l.m)                                        
+    assert_equal("a", l.a)                                        
+    assert_equal("b", l.b)                                        
+    assert_equal("c", l.c)                                        
+    assert_equal("m", l.m)                                        
   end            
 end                                        
