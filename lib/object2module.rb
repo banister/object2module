@@ -3,8 +3,10 @@ require 'inline'
 
 
 module Object2module
-  VERSION = "0.1.0"
+    VERSION = "0.1.0"
+end    
 
+class Object
   inline do |builder|
     builder.prefix %{
       #define KLASS_OF(o) RCLASS(RBASIC(o)->klass)
@@ -66,9 +68,11 @@ module Object2module
                 klass = self;
             else if(BUILTIN_TYPE(self) == T_OBJECT)
                 klass = rb_singleton_class(self);
+            else if(BUILTIN_TYPE(self) == T_MODULE)
+                return self;
             else
                 return Qnil;
-
+            
             chain_start = j_class_new(klass, rb_cObject);
 
             RBASIC(chain_start)->klass = rb_cModule;
@@ -85,5 +89,16 @@ module Object2module
             return chain_start;
         }
     }
+  end
+                        
+  def gen_extend(*objs)
+      extend(*objs.map { |o| o.object2module })
+  end
+  
+end
+
+class Module    
+  def gen_include(*objs)
+      include(*objs.map { |o| o.object2module })
   end
 end
