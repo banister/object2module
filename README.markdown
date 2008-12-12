@@ -2,7 +2,7 @@ Object2module
 =============
 
 * converts a Class (or the Singleton of an Object) to a Module
-* Includes gen\_extend and gen_include methods: generalizations of Object#extend and Module#include that work with
+* Includes gen\_extend and gen\_include methods: generalizations of Object#extend and Module#include that work with
   Objects and Classes as well as Modules
 
 How it works:
