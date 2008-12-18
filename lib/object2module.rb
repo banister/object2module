@@ -1,3 +1,7 @@
+# object2module.rb, light-weight alternative to rmagick for ruby 
+# (C) John Mair 2008
+# This program is distributed under the terms of the MIT License
+
 require 'rubygems'
 require 'inline'
 
