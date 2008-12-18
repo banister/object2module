@@ -1,4 +1,4 @@
-# object2module.rb, light-weight alternative to rmagick for ruby 
+# object2module.rb
 # (C) John Mair 2008
 # This program is distributed under the terms of the MIT License
 
