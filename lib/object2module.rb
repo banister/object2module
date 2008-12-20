@@ -65,15 +65,15 @@ class Object
 
     builder.c %{
         VALUE
-        object2module() {
+        to_module() {
             VALUE rclass, chain_start, jcur, klass;
 
-            if(BUILTIN_TYPE(self) == T_CLASS)
+            if(BUILTIN_TYPE(self) == T_MODULE)
+                return self;
+            else if(BUILTIN_TYPE(self) == T_CLASS)
                 klass = self;
             else if(BUILTIN_TYPE(self) == T_OBJECT)
                 klass = rb_singleton_class(self);
-            else if(BUILTIN_TYPE(self) == T_MODULE)
-                return self;
             else
                 return Qnil;
             
@@ -96,13 +96,13 @@ class Object
   end
                         
   def gen_extend(*objs)
-      extend(*objs.map { |o| o.object2module })
+      extend(*objs.map { |o| o.to_module })
   end
   
 end
 
 class Module    
   def gen_include(*objs)
-      include(*objs.map { |o| o.object2module })
+      include(*objs.map { |o| o.to_module })
   end
 end

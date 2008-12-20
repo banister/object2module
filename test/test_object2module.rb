@@ -43,24 +43,24 @@ end
 
 class Object2ModuleTest < Test::Unit::TestCase
   def test_class_to_module
-    assert_instance_of(Module, C.object2module)    
+    assert_instance_of(Module, C.to_module)    
   end
 
   def test_class_heirarchy
-    h = C.object2module.ancestors
+    h = C.to_module.ancestors
     assert_equal(B, h[1])
     assert_equal(A, h[2])
     assert_equal(M, h[3])
   end
 
   def test_class_extend
-    h = C.object2module
+    h = C.to_module
     o = Object.new
     assert_equal(o, o.extend(h))
   end
 
   def test_class_extended_methods
-    h = C.object2module
+    h = C.to_module
     o = Object.new
     o.extend(h)
     assert_equal("a", o.a)
@@ -71,13 +71,13 @@ class Object2ModuleTest < Test::Unit::TestCase
 
   def test_object_to_module
     o = C.new
-    assert_instance_of(Module, o.object2module)    
+    assert_instance_of(Module, o.to_module)    
 
   end
 
   def test_object_heirarchy                                  
     o = C.new
-    h = o.object2module.ancestors                           
+      h = o.to_module.ancestors                           
     assert_equal(C, h[1])                                   
     assert_equal(B, h[2])                                   
     assert_equal(A, h[3])                                   
@@ -85,14 +85,14 @@ class Object2ModuleTest < Test::Unit::TestCase
   end                                                       
                                                             
   def test_object_extend                                           
-    h = C.object2module                                     
+    h = C.to_module                                     
     o = Object.new                                          
     assert_equal(o, o.extend(h))                            
   end                                                       
                                                             
   def test_object_extended_methods                                 
     o = C.new
-    h = o.object2module                                     
+    h = o.to_module                                     
     l = Object.new                                          
     l.extend(h)                                             
     assert_equal("a", l.a)                                        
