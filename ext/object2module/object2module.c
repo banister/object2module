@@ -31,7 +31,8 @@ class_alloc(VALUE flags, VALUE klass)
 
 /* a modified version of include_class_new from class.c */
 static VALUE
-j_class_new(VALUE module, VALUE sup) {
+j_class_new(VALUE module, VALUE sup)
+{
 
 #ifdef RUBY_19
     VALUE klass = class_alloc(T_ICLASS, rb_cClass);
@@ -40,12 +41,11 @@ j_class_new(VALUE module, VALUE sup) {
     OBJSETUP(klass, rb_cClass, T_ICLASS);
 #endif
 
-    if (BUILTIN_TYPE(module) == T_ICLASS) {
+    if (TYPE(module) == T_ICLASS) {
         module = KLASS_OF(module);
     }
 
     if (!RCLASS_IV_TBL(module)) {
-
         RCLASS_IV_TBL(module) = (struct st_table *)st_init_numtable();
     }
 
@@ -53,7 +53,6 @@ j_class_new(VALUE module, VALUE sup) {
     RCLASS_IV_TBL(klass) = RCLASS_IV_TBL(module);
     RCLASS_SUPER(klass) = sup;
     if(TYPE(module) != T_OBJECT) {
-
         RCLASS_M_TBL(klass) = RCLASS_M_TBL(module);
     }
     else {
@@ -69,16 +68,17 @@ j_class_new(VALUE module, VALUE sup) {
         KLASS_OF(klass) = module;
     }
 
-
     if(TYPE(module) != T_OBJECT) {
         OBJ_INFECT(klass, module);
         OBJ_INFECT(klass, sup);
     }
+
     return (VALUE)klass;
 }
 
-static VALUE
-rb_to_module(VALUE self) {
+VALUE
+rb_to_module(VALUE self)
+{
     VALUE rclass, chain_start, jcur, klass;
 
     switch(BUILTIN_TYPE(self)) {
@@ -91,7 +91,10 @@ rb_to_module(VALUE self) {
     default:
         klass = rb_singleton_class(self);            
     }
-            
+
+    if (self == rb_cObject || self == rb_cClass || self == rb_cModule)
+      rb_raise(rb_eArgError, "cannot convert Object, Class or Module to module.");
+    
     chain_start = j_class_new(klass, rb_cObject);
 
     KLASS_OF(chain_start) = rb_cModule;
@@ -110,106 +113,19 @@ rb_to_module(VALUE self) {
     return chain_start;
 }
 
-static VALUE
-rb_reset_tbls(VALUE self) {
+VALUE
+reset_tbls(VALUE self)
+{
     RCLASS_IV_TBL(self) = (struct st_table *) 0;
     RCLASS_M_TBL(self) = (struct st_table *) st_init_numtable();
-    
+
     return Qnil;
 }
 
-/*
- *  call-seq:
- *     obj.gen_extend(other, ...)    => obj
- *  
- *  Adds to _obj_ the instance methods from each object given as a
- *  parameter.
- *     
- *     class C
- *       def hello
- *         "Hello from C.\n"
- *       end
- *     end
- *     
- *     class Klass
- *       def hello
- *         "Hello from Klass.\n"
- *       end
- *     end
- *     
- *     k = Klass.new
- *     k.hello         #=> "Hello from Klass.\n"
- *     k.gen_extend(C)   #=> #<Klass:0x401b3bc8>
- *     k.hello         #=> "Hello from C.\n"
- */
-
-static VALUE
-rb_gen_extend(int argc, VALUE * argv, VALUE self) {
-    int i;
-
-    if (argc == 0) rb_raise(rb_eArgError, "wrong number of arguments (0 for 1)");
-    
-    rb_singleton_class(self);
-
-    for(i = 0; i < argc; i++) {
-        VALUE mod = rb_to_module(argv[i]);
-        rb_funcall(mod, rb_intern("extend_object"), 1, self);
-        rb_funcall(mod, rb_intern("extended"), 1, self);
-        
-        /* only redirect if argv[i] is not a module */
-        if(argv[i] != mod) rb_reset_tbls(mod);
-    }
-
-    return self;
-}
-
-/*
- *  call-seq:
- *     gen_include(other, ...)    => self
- *  
- *  Adds to the implied receiver the instance methods from each object given as a
- *  parameter.
- *     
- *     class C
- *       def hello
- *         "Hello from C.\n"
- *       end
- *     end
- *     
- *     class Klass
- *       gen_include(C)
- *     end
- *     
- *     k = Klass.new
- *     k.hello         #=> "Hello from C.\n"
- */
-
-static VALUE
-rb_gen_include(int argc, VALUE * argv, VALUE self) {
-    int i;
-
-    if (argc == 0) rb_raise(rb_eArgError, "wrong number of arguments (0 for 1)");
-
-    for(i = 0; i < argc; i++) {
-        VALUE mod = rb_to_module(argv[i]);
-        rb_funcall(mod, rb_intern("append_features"), 1, self);
-        rb_funcall(mod, rb_intern("included"), 1, self);
-
-        if(argv[i] != mod) rb_reset_tbls(mod);       
-    }
-
-    return self;
-}
- 
-
-void Init_cobject2module() {
-
-    /* too dangerous as may result in double free. */
-    rb_define_method(rb_cObject, "to_module", rb_to_module , 0);
-
-    /* these methods are fine */
-    rb_define_method(rb_cObject, "gen_extend", rb_gen_extend, -1);
-    rb_define_method(rb_cModule, "gen_include", rb_gen_include, -1);
-    rb_define_method(rb_cModule, "reset_tbls", rb_reset_tbls, 0);
+void
+Init_object2module()
+{
+    rb_define_method(rb_cObject, "__to_module__", rb_to_module, 0);
+    rb_define_method(rb_cObject, "__reset_tbls__", reset_tbls, 0);
 }
 

@@ -1,5 +1,7 @@
+direc = File.dirname(__FILE__)
+
 require 'test/unit'
-require 'object2module'
+require "#{direc}/../lib/object2module"
 
 module M
     def m
@@ -43,11 +45,11 @@ end
 
 class Object2ModuleTest < Test::Unit::TestCase
     def test_class_to_module
-        assert_instance_of(Module, C.to_module)    
+        assert_instance_of(Module, C.__to_module__)    
     end
 
     def test_class_heirarchy
-        c = C.to_module
+        c = C.__to_module__
         
         h = c.ancestors
         assert_equal(B, h[1])
@@ -61,7 +63,7 @@ class Object2ModuleTest < Test::Unit::TestCase
     end
 
     def test_class_extended_methods
-        h = C.to_module
+        h = C.__to_module__
         o = Object.new
         o.extend(h)
         assert_equal("a", o.a)
@@ -72,12 +74,12 @@ class Object2ModuleTest < Test::Unit::TestCase
 
     def test_object_to_module
         o = C.new
-        assert_instance_of(Module, o.to_module)    
+        assert_instance_of(Module, o.__to_module__)    
     end
 
     def test_object_heirarchy                                  
         o = C.new
-        h = o.to_module.ancestors                           
+        h = o.__to_module__.ancestors                           
         assert_equal(C, h[1])                                   
         assert_equal(B, h[2])                                   
         assert_equal(A, h[3])                                   
@@ -85,14 +87,14 @@ class Object2ModuleTest < Test::Unit::TestCase
     end                                                       
     
     def test_object_extend                                           
-        h = C.to_module                                     
+        h = C.__to_module__                                     
         o = Object.new                                          
         assert_equal(o, o.extend(h))                            
     end                                                       
     
     def test_object_extended_methods                                 
         o = C.new
-        h = o.to_module                                     
+        h = o.__to_module__                                     
         l = Object.new                                          
         l.extend(h)                                             
         assert_equal("a", l.a)                                        
