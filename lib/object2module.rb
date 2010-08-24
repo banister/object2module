@@ -16,36 +16,14 @@ rescue LoadError => e
 end
 
 
-# call-seq:
-#    obj.gen_extend(other, ...)    => obj
-
-# Adds to _obj_ the instance methods from each object given as a
-# parameter.
-   
-#    class C
-#      def hello
-#        "Hello from C.\n"
-#      end
-#    end
-   
-#    class Klass
-#      def hello
-#        "Hello from Klass.\n"
-#      end
-#    end
-   
-#    k = Klass.new
-#    k.hello         #=> "Hello from Klass.\n"
-#    k.gen_extend(C)   #=> #<Klass:0x401b3bc8>
-#    k.hello         #=> "Hello from C.\n"
 class Object
-  def gen_extend(*objs)
+  def __gen_extend_or_include__(extend_or_include, *objs)  #:nodoc:
     raise ArgumentError, "wrong number of arguments (0 for 1)" if objs.empty?
 
     objs.each { |o|
       begin
         mod = o.__to_module__
-        extend(mod)
+        send(extend_or_include, mod)
       ensure
         mod.__reset_tbls__ if mod != o &&o != Object && o != Class && o != Module
       end
@@ -53,41 +31,56 @@ class Object
 
     self
   end
+
+  # call-seq:
+  #    obj.gen_extend(other, ...)    => obj
+  #
+  # Adds to _obj_ the instance methods from each object given as a
+  # parameter.
+  #   
+  #    class C
+  #      def hello
+  #        "Hello from C.\n"
+  #      end
+  #    end
+  #   
+  #    class Klass
+  #      def hello
+  #        "Hello from Klass.\n"
+  #      end
+  #    end
+  #   
+  #    k = Klass.new
+  #    k.hello         #=> "Hello from Klass.\n"
+  #    k.gen_extend(C)   #=> #<Klass:0x401b3bc8>
+  #    k.hello         #=> "Hello from C.\n"
+  def gen_extend(*objs)
+    __gen_extend_or_include__(:extend, *objs)
+  end
 end
 
-
-# call-seq:
-#    gen_include(other, ...)    => self
-
-# Adds to the implied receiver the instance methods from each object given as a
-# parameter.
-   
-#    class C
-#      def hello
-#        "Hello from C.\n"
-#      end
-#    end
-   
-#    class Klass
-#      gen_include(C)
-#    end
-   
-#    k = Klass.new
-#    k.hello         #=> "Hello from C.\n"
 class Module
+  
+  # call-seq:
+  #    gen_include(other, ...)    => self
+  #
+  # Adds to the implied receiver the instance methods from each object given as a
+  # parameter.
+  #   
+  #    class C
+  #      def hello
+  #        "Hello from C.\n"
+  #      end
+  #    end
+  #   
+  #    class Klass
+  #      gen_include(C)
+  #    end
+  #   
+  #    k = Klass.new
+  #    k.hello         #=> "Hello from C.\n"
   def gen_include(*objs)
-    raise ArgumentError, "wrong number of arguments (0 for 1)" if objs.empty?
-    
-    objs.each { |o|
-      begin
-        mod = o.__to_module__
-        include(mod)
-      ensure
-        mod.__reset_tbls__ if mod != o && o != Object && o != Class && o != Module
-      end
-    }
-
-    self
+    __gen_extend_or_include__(:include, *objs)
   end
 end
 
