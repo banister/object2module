@@ -28,7 +28,7 @@ class Object
   def __gen_extend_or_include__(extend_or_include, *objs)  #:nodoc:
     raise ArgumentError, "wrong number of arguments (at least 1)" if objs.empty?
 
-    objs.each { |mod|
+    objs.reverse.each { |mod|
         send(extend_or_include, mod)
     }
 

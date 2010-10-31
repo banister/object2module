@@ -3,15 +3,15 @@ Object2module
 
 (C) John Mair (banisterfiend) 2010
 
-_Enables Classes and Objects to be mixed into inheritance chains_
+_Enables Classes and Objects to be mixed into ancestor chains_
 
-Using Object2module you can treat classes and object (their singletons, anyway) as if they were modules and include or extend them into inheritance chains.
+Using Object2module you can treat classes and object (their singletons, anyway) as if they were modules and include or extend them into ancestor chains.
 
 Object2module provides the `gen_include` and `gen_extend` methods which are generalizations of the traditional `include` and `extend`.
 
 * Install the [gem](https://rubygems.org/gems/object2module): `gem install object2module`
 * Read the [documentation](http://rdoc.info/github/banister/object2module/master/file/README.markdown)
-* See the [source code](http://github.com/banister/object2module
+* See the [source code](http://github.com/banister/object2module)
 
 example: gen_include()
 --------------------------
@@ -45,7 +45,7 @@ example: gen_extend()
     end
 
     n = Object.new
-    n.gen_extend O
+    n.gen_extend o
     n.bye #=> :bye
     
 How it works
