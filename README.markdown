@@ -3,7 +3,7 @@ Object2module
 
 (C) John Mair (banisterfiend) 2010
 
-_Enables Classes and Objects to be mixed into inheritance chains__
+_Enables Classes and Objects to be mixed into inheritance chains_
 
 Using Object2module you can treat classes and object (their singletons, anyway) as if they were modules and include or extend them into inheritance chains.
 
