@@ -32,7 +32,7 @@ task :test do
 end
 
 [:mingw32, :mswin32].each do |v|
-  task v do
+  namespace v do
     spec = Gem::Specification.new do |s|
       apply_spec_defaults(s)        
       s.platform = "i386-#{v}"
@@ -43,12 +43,10 @@ end
       pkg.need_zip = false
       pkg.need_tar = false
     end
-
-    Rake::Task[:gem].invoke
   end
 end
 
-task :ruby do
+namespace :ruby do
   spec = Gem::Specification.new do |s|
     apply_spec_defaults(s)        
     s.platform = Gem::Platform::RUBY
@@ -59,7 +57,5 @@ task :ruby do
     pkg.need_zip = false
     pkg.need_tar = false
   end
-
-  Rake::Task[:gem].invoke
 end
 
