@@ -15,29 +15,32 @@ rescue LoadError => e
     require "#{direc}/object2module.#{dlext}"
 end
 
+module Kernel
+
+  # define a `singleton_class` method for the 1.8 kids
+  # @return [Class] The singleton class of the receiver
+  def singleton_class
+    class << self; self; end
+  end if !respond_to?(:singleton_class)
+end
 
 class Object
   def __gen_extend_or_include__(extend_or_include, *objs)  #:nodoc:
-    raise ArgumentError, "wrong number of arguments (0 for 1)" if objs.empty?
+    raise ArgumentError, "wrong number of arguments (at least 1)" if objs.empty?
 
-    objs.each { |o|
-      begin
-        mod = o.__to_module__
+    objs.each { |mod|
         send(extend_or_include, mod)
-      ensure
-        mod.__reset_tbls__ if mod != o &&o != Object && o != Class && o != Module
-      end
     }
 
     self
   end
 
-  # call-seq:
-  #    obj.gen_extend(other, ...)    => obj
-  #
-  # Adds to _obj_ the instance methods from each object given as a
+  # Adds to the singleton class of receiver the instance methods from each object given as a
   # parameter.
-  #   
+  # 
+  # @param [Array] objs The array of objects to `gen_extend`
+  # @return [Object] The receiver
+  # @example  
   #    class C
   #      def hello
   #        "Hello from C.\n"
@@ -55,18 +58,18 @@ class Object
   #    k.gen_extend(C)   #=> #<Klass:0x401b3bc8>
   #    k.hello         #=> "Hello from C.\n"
   def gen_extend(*objs)
-    __gen_extend_or_include__(:extend, *objs)
+    singleton_class.__gen_extend_or_include__(:gen_include_one, *objs)
   end
 end
 
 class Module
   
-  # call-seq:
-  #    gen_include(other, ...)    => self
-  #
   # Adds to the implied receiver the instance methods from each object given as a
   # parameter.
-  #   
+  # 
+  # @param [Array] objs The array of objects to `gen_include`
+  # @return [Object] The receiver
+  # @example  
   #    class C
   #      def hello
   #        "Hello from C.\n"
@@ -80,7 +83,7 @@ class Module
   #    k = Klass.new
   #    k.hello         #=> "Hello from C.\n"
   def gen_include(*objs)
-    __gen_extend_or_include__(:include, *objs)
+    __gen_extend_or_include__(:gen_include_one, *objs)
   end
 end
 

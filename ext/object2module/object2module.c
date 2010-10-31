@@ -6,126 +6,92 @@
 #include <ruby.h>
 #include "compat.h"
 
-#ifdef RUBY_19
-# include <ruby/st.h>
-#else
-# include <st.h>
-#endif
-
-/* class creation. from class.c in 1.9.1 */
-#ifdef RUBY_19
 static VALUE
-class_alloc(VALUE flags, VALUE klass)
+include_class_new(VALUE module, VALUE super)
 {
-    rb_classext_t *ext = ALLOC(rb_classext_t);
-    NEWOBJ(obj, struct RClass);
-    OBJSETUP(obj, klass, flags);
-    obj->ptr = ext;
-    RCLASS_IV_TBL(obj) = 0;
-    RCLASS_M_TBL(obj) = 0;
-    RCLASS_SUPER(obj) = 0;
-    RCLASS_IV_INDEX_TBL(obj) = 0;
-    return (VALUE)obj;
-}
-#endif
+  VALUE klass = create_class(T_ICLASS, rb_cClass);
 
-/* a modified version of include_class_new from class.c */
-static VALUE
-j_class_new(VALUE module, VALUE sup)
-{
+  if (BUILTIN_TYPE(module) == T_ICLASS) {
 
-#ifdef RUBY_19
-    VALUE klass = class_alloc(T_ICLASS, rb_cClass);
-#else
-    NEWOBJ(klass, struct RClass);
-    OBJSETUP(klass, rb_cClass, T_ICLASS);
-#endif
+    /* for real_include compat */
+    if (!NIL_P(rb_iv_get(module, "__module__")))
+      module = rb_iv_get(module, "__module__");
+    else
+      module = RBASIC(module)->klass;
+  }
 
-    if (TYPE(module) == T_ICLASS) {
-        module = KLASS_OF(module);
-    }
+  if (!RCLASS_IV_TBL(module)) {
+    RCLASS_IV_TBL(module) = st_init_numtable();
+  }
+  RCLASS_IV_TBL(klass) = RCLASS_IV_TBL(module);
+  RCLASS_M_TBL(klass) = RCLASS_M_TBL(module);
+  RCLASS_SUPER(klass) = super;
+  if (TYPE(module) == T_ICLASS) {
+    RBASIC(klass)->klass = RBASIC(module)->klass;
+  }
+  else {
+    RBASIC(klass)->klass = module;
+  }
 
-    if (!RCLASS_IV_TBL(module)) {
-        RCLASS_IV_TBL(module) = (struct st_table *)st_init_numtable();
-    }
+  OBJ_INFECT(klass, module);
+  OBJ_INFECT(klass, super);
 
-    /* assign iv_tbl, m_tbl and super */
-    RCLASS_IV_TBL(klass) = RCLASS_IV_TBL(module);
-    RCLASS_SUPER(klass) = sup;
-    if(TYPE(module) != T_OBJECT) {
-        RCLASS_M_TBL(klass) = RCLASS_M_TBL(module);
-    }
-    else {
-        RCLASS_M_TBL(klass) = RCLASS_M_TBL(CLASS_OF(module));
-    }
-
-    /* */
-
-    if (TYPE(module) == T_ICLASS) {
-        KLASS_OF(klass) = KLASS_OF(module);
-    }
-    else {
-        KLASS_OF(klass) = module;
-    }
-
-    if(TYPE(module) != T_OBJECT) {
-        OBJ_INFECT(klass, module);
-        OBJ_INFECT(klass, sup);
-    }
-
-    return (VALUE)klass;
+  return (VALUE)klass;
 }
 
 VALUE
-rb_to_module(VALUE self)
+rb_gen_include_one(VALUE klass, VALUE module)
 {
-    VALUE rclass, chain_start, jcur, klass;
+  VALUE p, c;
+  int changed = 0;
 
-    switch(BUILTIN_TYPE(self)) {
-    case T_MODULE:
-        return self;
-    case T_CLASS:
-        klass = self;
-        break;
-    case T_OBJECT:
-    default:
-        klass = rb_singleton_class(self);            
-    }
+  rb_frozen_class_p(klass);
+  if (!OBJ_UNTRUSTED(klass)) {
+    rb_secure(4);
+  }
 
-    if (self == rb_cObject || self == rb_cClass || self == rb_cModule)
-      rb_raise(rb_eArgError, "cannot convert Object, Class or Module to module.");
+  /* when including an object, include its singleton class */
+  if (TYPE(module) == T_OBJECT)
+    module = rb_singleton_class(module);
     
-    chain_start = j_class_new(klass, rb_cObject);
+  OBJ_INFECT(klass, module);
+  c = klass;
+  while (module) {
+    int superclass_seen = FALSE;
 
-    KLASS_OF(chain_start) = rb_cModule;
-    RBASIC(chain_start)->flags = T_MODULE;
-
-    jcur = chain_start;
-    for(rclass = RCLASS_SUPER(klass); rclass != rb_cObject;
-        rclass = RCLASS_SUPER(rclass)) {
-                
-        RCLASS_SUPER(jcur) = j_class_new(rclass, rb_cObject);
-        jcur = RCLASS_SUPER(jcur);
+    if (RCLASS_M_TBL(klass) == RCLASS_M_TBL(module))
+      rb_raise(rb_eArgError, "cyclic include detected");
+    /* ignore if the module included already in superclasses */
+    for (p = RCLASS_SUPER(klass); p; p = RCLASS_SUPER(p)) {
+      switch (BUILTIN_TYPE(p)) {
+      case T_ICLASS:
+        if (RCLASS_M_TBL(p) == RCLASS_M_TBL(module)) {
+          if (!superclass_seen) {
+            c = p;  /* move insertion point */
+          }
+          goto skip;
+        }
+        break;
+      case T_CLASS:
+        superclass_seen = TRUE;
+        break;
+      }
     }
+    c = RCLASS_SUPER(c) = include_class_new(module, RCLASS_SUPER(c));
+    if (RMODULE_M_TBL(module) && RMODULE_M_TBL(module)->num_entries)
+      changed = 1;
+  skip:
+    module = RCLASS_SUPER(module);
+  }
+  if (changed) rb_clear_cache();
 
-    RCLASS_SUPER(jcur) = (VALUE)NULL;
-
-    return chain_start;
+  return Qnil;
 }
 
-VALUE
-reset_tbls(VALUE self)
-{
-    RCLASS_IV_TBL(self) = (struct st_table *) 0;
-    RCLASS_M_TBL(self) = (struct st_table *) st_init_numtable();
-
-    return Qnil;
-}
 
 void
 Init_object2module()
 {
-    rb_define_method(rb_cObject, "__to_module__", rb_to_module, 0);
-    rb_define_method(rb_cObject, "__reset_tbls__", reset_tbls, 0);
+  rb_define_method(rb_cModule, "gen_include_one", rb_gen_include_one, 1);
 }
 
