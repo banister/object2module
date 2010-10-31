@@ -9,6 +9,9 @@ class Module
   public :include, :remove_const
 end
 
+puts "testing Object2module version #{Object2module::VERSION} with Remix version #{Remix::VERSION}..."
+puts "Ruby version: #{RUBY_VERSION}"
+
 describe Object2module do
   before do
     class A
@@ -121,6 +124,20 @@ describe Object2module do
       o.unextend A, true
       o.singleton_class.ancestors.first.should == Object
     end
+
+    it 'unextends an object by object (not by singleton)' do
+      o = Object.new
+      def o.hello
+        :o
+      end
+
+      n = Object.new
+      n.gen_extend o
+      n.hello.should == :o
+      n.unextend o
+      lambda { n.hello }.should.raise NameError
+    end
+
 
     it 'recursively unextends a singleton class gen_extended into another singleton class' do
       o = Object.new

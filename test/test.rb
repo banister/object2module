@@ -3,10 +3,11 @@ require 'rubygems'
 require 'bacon'
 require "#{direc}/../lib/object2module"
 
-
 class Module
   public :include, :remove_const
 end
+
+puts "testing Object2module version #{Object2module::VERSION}..."
 
 describe Object2module do
   before do

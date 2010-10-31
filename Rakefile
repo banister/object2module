@@ -21,6 +21,10 @@ def apply_spec_defaults(s)
   s.date = Time.now.strftime '%Y-%m-%d'
   s.require_path = 'lib'
   s.homepage = "http://banisterfiend.wordpress.com"
+  s.files = FileList["Rakefile", "README.markdown", "LICENSE",
+                     "lib/**/*.rb", "test/**/*.rb", "ext/**/extconf.rb",
+                     "ext/**/*.h", "ext/**/*.c"].to_a
+  
 end
 
 task :test do
@@ -32,9 +36,7 @@ end
     spec = Gem::Specification.new do |s|
       apply_spec_defaults(s)        
       s.platform = "i386-#{v}"
-      s.files = FileList["Rakefile", "README.markdown", "LICENSE",
-                         "lib/object2module.rb", "lib/1.8/object2module.#{dlext}",
-                         "lib/1.9/object2module.#{dlext}", "lib/object2module/version.rb", "test/*.rb"].to_a
+      s.files += FileList["lib/**/*.#{dlext}"].to_a
     end
 
     Rake::GemPackageTask.new(spec) do |pkg|
@@ -50,9 +52,6 @@ task :ruby do
   spec = Gem::Specification.new do |s|
     apply_spec_defaults(s)        
     s.platform = Gem::Platform::RUBY
-    s.files = FileList["Rakefile", "README.markdown", "LICENSE",
-                       "lib/object2module.rb","lib/object2module/version.rb",
-                       "test/*.rb", "ext/**/extconf.rb", "ext/**/*.h", "ext/**/*.c"].to_a
     s.extensions = ["ext/object2module/extconf.rb"]
   end
 
