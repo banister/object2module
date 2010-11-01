@@ -61,7 +61,7 @@ the internals of Ruby to bring new and interesting functionality to
 the language, see also:
 
 * [Remix](http://github.com/banister/remix) - Makes ancestor chains read/write
-* [Real Include](http://github.com/banister/real_include) - Brings in
+* [Include Complete](http://github.com/banister/include_complete) - Brings in
   module singleton classes during an include. No more ugly ClassMethods and included() hook hacks.
 * [Prepend](http://github.com/banister/prepend) - Prepends modules in front of a class; so method lookup starts with the module
 * [GenEval](http://github.com/banister/gen_eval) - A strange new breed of instance_eval
