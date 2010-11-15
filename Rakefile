@@ -7,9 +7,10 @@ require './lib/object2module/version.rb'
 dlext = Config::CONFIG['DLEXT']
 direc = File.dirname(__FILE__)
 
-CLEAN.include("ext/**/*.#{dlext}", "ext/**/.log", "ext/**/.o", "ext/**/*~", "ext/**/*#*", "ext/**/.obj", "ext/**/.def", "ext/**/.pdb")
 CLOBBER.include("**/*.#{dlext}", "**/*~", "**/*#*", "**/*.log", "**/*.o", "doc/**")
-
+CLEAN.include("ext/**/*.#{dlext}", "ext/**/.log", "ext/**/.o", "ext/**/*~",
+              "ext/**/*#*", "ext/**/.obj", "ext/**/.def", "ext/**/.pdb")
+                
 def apply_spec_defaults(s)
   s.name = "object2module"
   s.summary = "object2module enables ruby classes and objects to be used as modules"
@@ -21,9 +22,9 @@ def apply_spec_defaults(s)
   s.date = Time.now.strftime '%Y-%m-%d'
   s.require_path = 'lib'
   s.homepage = "http://banisterfiend.wordpress.com"
-  s.files = FileList["Rakefile", "README.markdown", "LICENSE",
+  s.files = Dir["Rakefile", "README.markdown", "LICENSE",
                      "lib/**/*.rb", "test/**/*.rb", "ext/**/extconf.rb",
-                     "ext/**/*.h", "ext/**/*.c"].to_a
+                     "ext/**/*.h", "ext/**/*.c"]
   
 end
 
@@ -36,7 +37,7 @@ end
     spec = Gem::Specification.new do |s|
       apply_spec_defaults(s)        
       s.platform = "i386-#{v}"
-      s.files += FileList["lib/**/*.#{dlext}"].to_a
+      s.files += Dir["lib/**/*.#{dlext}"]
     end
 
     Rake::GemPackageTask.new(spec) do |pkg|
@@ -59,3 +60,36 @@ namespace :ruby do
   end
 end
 
+desc "build the 1.8 and 1.9 binaries from source and copy to lib/"
+task :compile do
+  build_for = proc do |pik_ver, ver|
+    sh %{ \
+          c:\\devkit\\devkitvars.bat && \
+          pik #{pik_ver} && \
+          ruby extconf.rb && \
+          make clean && \
+          make && \
+          cp *.so #{direc}/lib/#{ver} \
+        }
+  end
+  
+  chdir("#{direc}/ext/object2module") do
+    build_for.call("187", "1.8")
+    build_for.call("192", "1.9")
+  end
+end
+
+desc "build all platform gems at once"
+task :gems => [:rmgems, "mingw32:gem", "mswin32:gem", "ruby:gem"]
+
+desc "remove all platform gems"
+task :rmgems => ["ruby:clobber_package"]
+
+desc "build and push latest gems"
+task :pushgems => :gems do
+  chdir("#{direc}/pkg") do
+    Dir["*.gem"].each do |gemfile|
+      sh "gem push #{gemfile}"
+    end
+  end
+end

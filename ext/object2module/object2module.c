@@ -7,18 +7,52 @@
 #include "compat.h"
 
 static VALUE
+class_to_s(VALUE self)
+{
+  if (!rb_obj_is_kind_of(self, rb_cModule) || self == Qnil)
+    return rb_str_new2("Anon");
+  
+  VALUE attached = rb_iv_get(self, "__attached__");
+  VALUE name;
+  
+  if (attached) {
+    VALUE val = rb_iv_get(attached, "__module__");
+    if (NIL_P(val))
+      return rb_str_new2("Anon");
+    
+    name = rb_mod_name(val);
+  }
+  else {
+    VALUE val = rb_iv_get(attached, "__module__");
+    if (NIL_P(val))
+      return rb_str_new2("Anon");
+
+    name = rb_mod_name(val);
+  }
+  
+  /* if module does not have a name, return "Anon" */
+  if (NIL_P(name) || RSTRING_LEN(name) == 0)
+    return rb_str_new2("Anon");
+  else
+    return name;
+}
+
+static VALUE
 include_class_new(VALUE module, VALUE super)
 {
   VALUE klass = create_class(T_ICLASS, rb_cClass);
 
   if (BUILTIN_TYPE(module) == T_ICLASS) {
 
-    /* for real_include compat */
+    /* for include_complete compat */
     if (!NIL_P(rb_iv_get(module, "__module__")))
       module = rb_iv_get(module, "__module__");
     else
       module = RBASIC(module)->klass;
   }
+
+  rb_define_singleton_method(module, "to_s", class_to_s, 0);
+  rb_define_method(module, "to_s", class_to_s, 0);
 
   if (!RCLASS_IV_TBL(module)) {
     RCLASS_IV_TBL(module) = st_init_numtable();

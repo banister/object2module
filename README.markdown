@@ -56,7 +56,7 @@ Object2module simply removes the check for `T_MODULE` from `rb_include_module()`
 Companion Libraries
 --------------------
 
-Remix is one of a series of experimental libraries that mess with
+Object2module is one of a series of experimental libraries that mess with
 the internals of Ruby to bring new and interesting functionality to
 the language, see also:
 
