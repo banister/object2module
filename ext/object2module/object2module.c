@@ -17,15 +17,15 @@ class_to_s(VALUE self)
   
   if (attached) {
     VALUE val = rb_iv_get(attached, "__module__");
-    if (NIL_P(val))
-      return rb_str_new2("Anon");
+    /* if (NIL_P(val)) */
+    /*   return rb_str_new2("Anon"); */
     
     name = rb_mod_name(val);
   }
   else {
     VALUE val = rb_iv_get(attached, "__module__");
-    if (NIL_P(val))
-      return rb_str_new2("Anon");
+    /* if (NIL_P(val)) */
+    /*   return rb_str_new2("Anon"); */
 
     name = rb_mod_name(val);
   }
@@ -37,6 +37,20 @@ class_to_s(VALUE self)
     return name;
 }
 
+// also returns true for receiver
+static VALUE
+is_meta_singleton_of(VALUE self, VALUE obj)
+{
+  if (self == obj)
+    return Qtrue;
+  else if (!FL_TEST(self, FL_SINGLETON) && self != obj)
+    return Qfalse;
+  else {
+    VALUE attached = rb_iv_get(self, "__attached__");
+    return is_meta_singleton_of(attached, obj);
+  }
+}
+      
 static VALUE
 include_class_new(VALUE module, VALUE super)
 {
@@ -51,8 +65,8 @@ include_class_new(VALUE module, VALUE super)
       module = RBASIC(module)->klass;
   }
 
-  rb_define_singleton_method(module, "to_s", class_to_s, 0);
-  rb_define_method(module, "to_s", class_to_s, 0);
+  //  rb_define_singleton_method(module, "to_s", class_to_s, 0);
+  //  rb_define_method(module, "to_s", class_to_s, 0);
 
   if (!RCLASS_IV_TBL(module)) {
     RCLASS_IV_TBL(module) = st_init_numtable();
@@ -90,7 +104,9 @@ rb_gen_include_one(VALUE klass, VALUE module)
     
   OBJ_INFECT(klass, module);
   c = klass;
-  while (module) {
+
+  // loop until superclass is 0 (for modules) or superclass is a meta^n singleton of Object (for classes)
+  while (module && !rb_is_meta_singleton_of(module, rb_cObject)) {
     int superclass_seen = FALSE;
 
     if (RCLASS_M_TBL(klass) == RCLASS_M_TBL(module))
@@ -126,6 +142,9 @@ rb_gen_include_one(VALUE klass, VALUE module)
 void
 Init_object2module()
 {
-  rb_define_method(rb_cModule, "gen_include_one", rb_gen_include_one, 1);
+  VALUE mObject2module = rb_define_module("Object2module");
+  VALUE mModuleExtensions = rb_define_module_under(mObject2module, "ModuleExtensions");
+
+  rb_define_method(mModuleExtensions, "gen_include_one", rb_gen_include_one, 1);
 }
 

@@ -65,6 +65,7 @@ the language, see also:
   module singleton classes during an include. No more ugly ClassMethods and included() hook hacks.
 * [Prepend](http://github.com/banister/prepend) - Prepends modules in front of a class; so method lookup starts with the module
 * [GenEval](http://github.com/banister/gen_eval) - A strange new breed of instance_eval
+* [LocalEval](http://github.com/banister/local_eval) - instance_eval without changing self
 
 Contact
 -------

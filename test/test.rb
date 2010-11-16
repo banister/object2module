@@ -99,6 +99,17 @@ describe Object2module do
       C.new.l.should == :l
       C.new.n.should == :n
     end
+
+    it 'should not not re-include Object when gen_including a class' do
+      A.gen_include B
+      A.ancestors.count(Object).should == 1
+    end
+
+    it 'should not include singleton of Object when gen_including a singleton class' do
+      A.gen_include B.singleton_class
+      A.ancestors.include?(B.singleton_class).should == true
+      A.ancestors.count(Object.singleton_class).should == 0
+    end
   end
 
   describe 'gen_extend' do
