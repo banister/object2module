@@ -51,7 +51,9 @@ example: gen_extend()
 How it works
 --------------
 
-Object2module simply removes the check for `T_MODULE` from `rb_include_module()`
+Object2module removes the check for `T_MODULE` from
+`rb_include_module()` and prevents inclusion of classes above Object
+(or meta^n(Object) for singleton classes).
 
 Companion Libraries
 --------------------
