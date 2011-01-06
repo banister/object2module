@@ -9,7 +9,8 @@ direc = File.dirname(__FILE__)
 
 CLOBBER.include("**/*.#{dlext}", "**/*~", "**/*#*", "**/*.log", "**/*.o", "doc/**")
 CLEAN.include("ext/**/*.#{dlext}", "ext/**/.log", "ext/**/.o", "ext/**/*~",
-              "ext/**/*#*", "ext/**/.obj", "ext/**/.def", "ext/**/.pdb")
+              "ext/**/*#*", "ext/**/.obj", "ext/**/.def",
+              "ext/**/.pdb", "*flymake*", "*flymake*.*")
                 
 def apply_spec_defaults(s)
   s.name = "object2module"
@@ -44,6 +45,8 @@ end
       pkg.need_zip = false
       pkg.need_tar = false
     end
+
+    task :gem => :clean
   end
 end
 
@@ -58,10 +61,15 @@ namespace :ruby do
     pkg.need_zip = false
     pkg.need_tar = false
   end
+
+  task :gem => :clean
 end
 
+directories = ["#{direc}/lib/1.8", "#{direc}/lib/1.9"]
+directories.each { |d| directory d }
+
 desc "build the 1.8 and 1.9 binaries from source and copy to lib/"
-task :compile do
+task :compile => [:clobber, *directories] do
   build_for = proc do |pik_ver, ver|
     sh %{ \
           c:\\devkit\\devkitvars.bat && \
@@ -80,7 +88,7 @@ task :compile do
 end
 
 desc "build all platform gems at once"
-task :gems => [:rmgems, "mingw32:gem", "mswin32:gem", "ruby:gem"]
+task :gems => [:clean, :rmgems, "mingw32:gem", "mswin32:gem", "ruby:gem"]
 
 desc "remove all platform gems"
 task :rmgems => ["ruby:clobber_package"]

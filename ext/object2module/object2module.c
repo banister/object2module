@@ -72,7 +72,7 @@ rb_gen_include_one(VALUE klass, VALUE module)
   c = klass;
 
   // loop until superclass is 0 (for modules) or superclass is a meta^n singleton of Object (for classes)
-  while (module && !rb_is_meta_singleton_of(module, rb_cObject)) {
+  while (module && !is_meta_singleton_of(module, rb_cObject)) {
     int superclass_seen = FALSE;
 
     if (RCLASS_M_TBL(klass) == RCLASS_M_TBL(module))
